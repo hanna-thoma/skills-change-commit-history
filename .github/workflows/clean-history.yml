@@ -1,0 +1,33 @@
+name: Clean History
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+permissions:
+  contents: write
+
+jobs:
+  clean_repo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install git-filter-repo
+        run: |
+          pip install git-filter-repo
+
+      - name: Run git-filter-repo
+        run: |
+          git config --global user.name "hanna-thoma"
+          git config --global user.email "hanna.t0710@gmail.com"
+          git filter-repo --path .env --invert-paths --force
+
+      - name: Force push cleaned history
+        run: |
+          git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git || git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          git push origin main --force
